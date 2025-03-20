@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grabador de Audio MP3</title>
+</head>
+<body>
+    <h1>Grabador de Audio</h1>
+    <button id="btnIniciar" onclick="iniciarGrabacion()">Iniciar grabación</button>
+    <button id="btnDetener" onclick="detenerGrabacion()" disabled>Detener y descargar</button>
+
+    <!-- Incluir lamejs para codificación MP3 -->
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let encoder;
+        let audioContext;
+        let microphone;
+
+        async function iniciarGrabacion() {
+            try {
+                // Solicitar acceso al micrófono
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Configurar el contexto de audio
+                audioContext = new AudioContext();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                // Configurar el codificador MP3
+                encoder = new lamejs.Mp3Encoder(1, 44100, 128); // Mono, 44.1kHz, 128kbps
+                
+                // Iniciar la captura de audio
+                const scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+                microphone.connect(scriptNode);
+                scriptNode.connect(audioContext.destination);
+
+                scriptNode.onaudioprocess = (e) => {
+                    const samples = e.inputBuffer.getChannelData(0); // Obtener datos PCM
+                    const mp3Data = encoder.encodeBuffer(samples); // Codificar a MP3
+                    audioChunks.push(mp3Data);
+                };
+
+                // Habilitar/deshabilitar botones
+                document.getElementById("btnIniciar").disabled = true;
+                document.getElementById("btnDetener").disabled = false;
+
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        function detenerGrabacion() {
+            // Detener la captura
+            microphone.disconnect();
+            audioContext.close();
+
+            // Finalizar la codificación MP3
+            const mp3Final = encoder.flush();
+            audioChunks.push(mp3Final);
+
+            // Crear el Blob y enlace de descarga
+            const blob = new Blob(audioChunks, { type: "audio/mp3" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "grabacion.mp3";
+            a.click();
+
+            // Resetear variables
+            audioChunks = [];
+            document.getElementById("btnIniciar").disabled = false;
+            document.getElementById("btnDetener").disabled = true;
+        }
+    </script>
+</body>
+</html>
