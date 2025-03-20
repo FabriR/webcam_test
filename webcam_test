@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba de Webcam</title>
+</head>
+<body>
+    <h1>Prueba tu webcam</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <div>
+        <button onclick="iniciarWebcam()">Encender webcam</button>
+        <button onclick="detenerWebcam()">Apagar webcam</button>
+    </div>
+
+    <script>
+        let videoStream = null;
+
+        async function iniciarWebcam() {
+            try {
+                // Solicitar acceso a la webcam
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+                
+                // Mostrar el stream en el elemento <video>
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                videoStream = stream;
+            } catch (error) {
+                alert("Error al acceder a la webcam: " + error.message);
+            }
+        }
+
+        function detenerWebcam() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            text-align: center;
+            padding: 20px;
+        }
+        video {
+            border: 2px solid #333;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>
