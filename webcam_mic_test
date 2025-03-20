@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba Webcam y Micrófono</title>
+</head>
+<body>
+    <h1>Webcam + Micrófono</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <div>
+        <button onclick="iniciarPrueba()">Iniciar prueba</button>
+        <button onclick="detenerPrueba()">Detener prueba</button>
+    </div>
+
+    <script>
+        let mediaStream = null;
+        let audioContext = null;
+        let microphoneNode = null;
+
+        async function iniciarPrueba() {
+            try {
+                // Solicitar acceso a webcam y micrófono
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true // Habilitamos el micrófono
+                });
+
+                // Mostrar video
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                mediaStream = stream;
+
+                // Configurar audio para escuchar el micrófono
+                audioContext = new AudioContext();
+                microphoneNode = audioContext.createMediaStreamSource(stream);
+                microphoneNode.connect(audioContext.destination); // Conecta a los altavoces
+
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        function detenerPrueba() {
+            // Detener webcam y micrófono
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+
+            // Detener audio
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+                microphoneNode = null;
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            text-align: center;
+            padding: 20px;
+        }
+        video {
+            border: 2px solid #333;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>
